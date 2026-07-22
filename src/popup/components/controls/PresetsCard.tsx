@@ -21,8 +21,7 @@ export function PresetsCard(props: Props): any {
   return (
     <section className="preset-card" aria-labelledby="presetTitle">
       <div className="preset-header">
-        <div><span className="eyebrow">AJUSTE RÁPIDO</span><strong id="presetTitle">Presets</strong></div>
-        <span aria-live="polite">{activeLabel || "Personalizado"}</span>
+        <div><strong id="presetTitle">Presets</strong></div>
       </div>
       <div className="preset-list" role="group" aria-label="Presets de áudio">
         {Object.entries(AUDIO_PRESETS).map(([name, preset]) => (
