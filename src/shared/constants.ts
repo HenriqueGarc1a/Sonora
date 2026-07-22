@@ -36,22 +36,6 @@ export const PANEL_TITLES: Readonly<Record<PanelId, string>> = Object.freeze({
 
 export const AUDIO_PRESETS: Readonly<Record<string, PresetDefinition>> = Object.freeze({
   neutral: { label: "Neutro", values: { ...DEFAULT_SETTINGS, preservePitch: false } },
-  dialogue: {
-    label: "Diálogo",
-    values: { bass: -3, mid: 4, treble: 3, reverb: 0, stereoWidth: 80, pan: 0, nightMode: true },
-  },
-  bass: {
-    label: "Graves+",
-    values: { bass: 8, mid: -2, treble: 2, reverb: 0, stereoWidth: 115, pan: 0, nightMode: false },
-  },
-  cinema: {
-    label: "Cinema",
-    values: { bass: 5, mid: 0, treble: 4, reverb: 18, stereoWidth: 135, pan: 0, nightMode: false },
-  },
-  night: {
-    label: "Madrugada",
-    values: { bass: -4, mid: 2, treble: -3, reverb: 0, stereoWidth: 75, pan: 0, nightMode: true },
-  },
 });
 
 export const SETTING_LIMITS: Readonly<Record<string, readonly [number, number]>> = Object.freeze({
