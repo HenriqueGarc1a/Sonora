@@ -185,11 +185,10 @@
       <style>${floatingPanelStyles()}</style>
       <section class="panel" aria-label="Controles Sonora: ${definition.title}">
         <header class="titlebar">
-          <span class="brand"><i></i><strong>SONORA</strong><small>${definition.title}</small></span>
+          <span class="brand"><i></i><strong>SONORA</strong></span>
           <button class="close" type="button" aria-label="Fechar painel ${definition.title}" title="Remover da página">×</button>
         </header>
         <div class="fields">${definition.fields.map(createFieldMarkup).join("")}</div>
-        <footer>Arraste pelo topo · ajustes salvos automaticamente</footer>
       </section>
     `;
     document.documentElement.append(host);
