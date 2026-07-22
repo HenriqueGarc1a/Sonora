@@ -8,7 +8,7 @@ const dist = resolve(root, "dist");
 const compiled = resolve(root, ".build");
 const cleanOnly = process.argv.includes("--clean");
 const makeZip = process.argv.includes("--zip");
-const version = "0.7.1";
+const version = "0.7.2";
 const localTsc = resolve(root, "node_modules", "typescript", "bin", "tsc");
 
 async function runTypeScript(args) {

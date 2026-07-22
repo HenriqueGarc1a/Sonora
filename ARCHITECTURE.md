@@ -2,15 +2,15 @@
 
 ## Popup
 
-`useSonoraController` coordena a inicialização, mas cada grupo de regras possui um hook próprio:
+O popup usa React 18 e é separado por responsabilidades:
 
-- `useAudioSettings`: controles, presets aplicados e sincronização de áudio.
-- `useCustomPresets`: criação, exclusão e estado do diálogo.
-- `usePanelLayout`: ordem, drag-and-drop e painéis flutuantes.
-- `useThemeSettings`: paleta, aplicação imediata e persistência.
-- `useToast`: mensagens temporárias.
+- `app/`: componente raiz da interface.
+- `components/`: cabeçalho, controles, configurações e diálogos.
+- `controllers/`: estado e regras de áudio, tema, layout e presets.
+- `services/`: comunicação com o service worker.
+- `styles/`: CSS dividido por área da interface.
 
-A renderização está separada entre componentes comuns, controles, configurações e diálogos.
+O ponto de entrada cria uma única raiz com `ReactDOM.createRoot` e renderiza `SonoraApp`.
 
 ## Background
 
@@ -40,4 +40,4 @@ O processamento Web Audio foi separado em:
 
 ## Build
 
-O TypeScript primeiro gera CommonJS em `.build/`. `scripts/build.mjs` resolve as dependências locais e monta bundles IIFE. A pasta temporária é removida ao final.
+O TypeScript primeiro gera CommonJS em `.build/`. `scripts/build.mjs` resolve as dependências locais e monta bundles IIFE. A pasta temporária é removida ao final. Os builds de React 18 e React DOM 18 são copiados localmente para o popup, sem CDN.

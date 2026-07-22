@@ -5,7 +5,8 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Elemento #root não encontrado.");
 
 try {
-  ReactDOM.render(<SonoraApp />, root);
+  const reactRoot = ReactDOM.createRoot(root);
+  reactRoot.render(<SonoraApp />);
 } catch (error) {
   const message = error instanceof Error ? error.message : "Falha desconhecida ao iniciar a interface.";
   root.innerHTML = `

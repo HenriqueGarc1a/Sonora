@@ -1,6 +1,6 @@
 # Sonora — Controle de Áudio
 
-Extensão Chrome Manifest V3 que processa localmente o áudio da aba atual. A interface utiliza **React + TypeScript**, e o código-fonte é separado por domínio.
+Extensão Chrome Manifest V3 que processa localmente o áudio da aba atual. A interface utiliza **React 18 + TypeScript**, e o código-fonte é separado por domínio.
 
 ## Recursos
 
@@ -50,7 +50,7 @@ src/
 │   │   ├── controls/       # Painéis e controles de áudio
 │   │   ├── dialogs/        # Diálogos
 │   │   └── settings/       # Abas e cartões de configurações
-│   ├── hooks/              # Estado e regras da interface
+│   ├── controllers/        # Estado e regras da interface
 │   ├── services/           # Comunicação com o service worker
 │   └── styles/             # CSS separado por área
 ├── background/             # Captura, storage, presets, layout e roteamento
@@ -75,4 +75,4 @@ A configuração não usa mais `module: "None"` nem `outFile`. Essas opções es
 
 ## Dependências empacotadas
 
-React e React DOM ficam dentro do pacote da extensão, sem CDN ou código remoto. Consulte `THIRD_PARTY_LICENSES.md`.
+React 18 e React DOM 18 ficam dentro do pacote da extensão, sem CDN ou código remoto. Consulte `THIRD_PARTY_LICENSES.md`.
