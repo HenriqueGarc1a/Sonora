@@ -67,7 +67,9 @@ async function startCapture(streamId, tabId, settings) {
   }
 
   audioContext = new AudioContext({ latencyHint: "interactive" });
-  await audioContext.audioWorklet.addModule("stereo-width-processor.js");
+  await audioContext.audioWorklet.addModule(
+    chrome.runtime.getURL("src/audio/stereo-width-processor.js"),
+  );
 
   const source = audioContext.createMediaStreamSource(mediaStream);
   const stereoWidth = new AudioWorkletNode(audioContext, "stereo-width", {

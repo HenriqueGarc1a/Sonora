@@ -14,8 +14,12 @@ Extensão Chrome Manifest V3 que processa localmente o áudio da aba atual.
 - Balanço independente entre os canais esquerdo e direito.
 - Modo noturno para aproximar sons baixos e controlar picos altos.
 - Presets para diálogo, graves, cinema e audição durante a madrugada.
+- Presets personalizados criados a partir dos ajustes atuais e salvos no navegador.
 - Preset **Neutro** que restaura volume, velocidade, equalização, reverb e estéreo, deixando a preservação de pitch desligada.
 - Atalhos para as velocidades mais usadas.
+- Caixas reordenáveis, sem numeração, com a ordem persistida automaticamente.
+- Controles que podem ser fixados como painéis flutuantes e arrastáveis sobre a página.
+- Área de configurações para gerenciar presets, restaurar o layout e consultar a licença.
 
 Todo o áudio permanece no navegador. A extensão não usa servidor nem envia gravações.
 
@@ -33,7 +37,10 @@ Todo o áudio permanece no navegador. A extensão não usa servidor nem envia gr
 2. Clique no ícone da Sonora. A extensão ativa automaticamente nessa guia.
 3. Ajuste os controles e feche o popup quando quiser; o processamento continua ativo.
 4. Para ouvir o áudio sem ajustes, clique em **Neutro**. Esse preset também restaura o volume para 100%, a velocidade para 1× e desliga a preservação de pitch.
-5. O processamento termina quando a guia é fechada.
+5. Use o botão **+** após os presets para salvar os ajustes atuais com um nome.
+6. Arraste uma caixa pelo puxador para mudar sua ordem. Ao levá-la para fora do menu, ela fica fixada sobre a página; o botão no canto superior direito oferece a mesma ação.
+7. Abra a engrenagem para remover presets personalizados, restaurar o layout ou consultar as licenças.
+8. O processamento termina quando a guia é fechada.
 
 O clique no ícone fornece a ação explícita exigida pelo Chrome para iniciar a captura. A versão atual processa uma guia por vez; abrir a Sonora em outra guia transfere o processamento para ela.
 
@@ -46,8 +53,13 @@ O clique no ícone fornece a ação explícita exigida pelo Chrome para iniciar 
 
 ## Estrutura
 
-- `background.js`: coordena captura, permissões e estado.
-- `offscreen.js`: mantém o pipeline Web Audio ativo em segundo plano.
-- `stereo-width-processor.js`: controla a largura estéreo sem alterar o centro da mixagem.
-- `content.js`: controla velocidade e preservação de pitch nos players da página.
-- `popup.html`, `popup.css` e `popup.js`: interface e controles.
+- `manifest.json`: configuração da extensão Manifest V3.
+- `src/runtime/`: processo de fundo e controlador injetado nas páginas.
+- `src/audio/`: documento offscreen e pipeline Web Audio.
+- `src/popup/`: interface, estilos e interações do menu da extensão.
+- `assets/icons/`: ícones da Sonora.
+- `LICENSE`: licença MIT do projeto.
+
+## Privacidade e dependências
+
+As preferências ficam em `chrome.storage.local`. A Sonora não inclui bibliotecas de terceiros e não faz requisições externas: usa somente JavaScript nativo, APIs de Extensões do Chrome e Web Audio API.
