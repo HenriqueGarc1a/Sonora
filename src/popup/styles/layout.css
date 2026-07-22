@@ -61,3 +61,16 @@
 .icon-button:hover, .icon-button.active { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
 .icon-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 
+
+.bootstrap-error {
+  min-height: 320px;
+  padding: 28px;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.bootstrap-error h1,
+.bootstrap-error p {
+  margin: 0;
+}

@@ -1,11 +1,11 @@
 {
   "name": "sonora-extension",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "Extensão Chrome Sonora com React, TypeScript e arquitetura modular.",
   "scripts": {
     "clean": "node scripts/build.mjs --clean",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "node scripts/typecheck.mjs",
     "build": "node scripts/build.mjs",
     "zip": "node scripts/build.mjs --zip"
   },

@@ -1,6 +1,6 @@
 import type { AudioSettings, PanelId, PresetDefinition, Theme } from "./types";
 
-export const VERSION = "0.7.0";
+export const VERSION = "0.7.1";
 
 export const DEFAULT_SETTINGS: Readonly<AudioSettings> = Object.freeze({
   volume: 100,

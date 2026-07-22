@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,8 +8,25 @@ const dist = resolve(root, "dist");
 const compiled = resolve(root, ".build");
 const cleanOnly = process.argv.includes("--clean");
 const makeZip = process.argv.includes("--zip");
-const version = "0.7.0";
-const tsc = process.platform === "win32" ? "tsc.cmd" : "tsc";
+const version = "0.7.1";
+const localTsc = resolve(root, "node_modules", "typescript", "bin", "tsc");
+
+async function runTypeScript(args) {
+  try {
+    await access(localTsc);
+    execFileSync(process.execPath, [localTsc, ...args], { cwd: root, stdio: "inherit" });
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    try {
+      execFileSync(process.platform === "win32" ? "tsc.cmd" : "tsc", args, { cwd: root, stdio: "inherit" });
+    } catch (fallbackError) {
+      if (fallbackError?.code === "ENOENT") {
+        throw new Error("TypeScript não encontrado. Execute npm install antes de rodar o build.");
+      }
+      throw fallbackError;
+    }
+  }
+}
 
 await Promise.all([
   rm(dist, { recursive: true, force: true }),
@@ -17,8 +34,8 @@ await Promise.all([
 ]);
 if (cleanOnly) process.exit(0);
 
-execFileSync(tsc, ["--noEmit", "-p", resolve(root, "tsconfig.json")], { cwd: root, stdio: "inherit" });
-execFileSync(tsc, ["-p", resolve(root, "tsconfig.build.json")], { cwd: root, stdio: "inherit" });
+await runTypeScript(["--noEmit", "-p", resolve(root, "tsconfig.json")]);
+await runTypeScript(["-p", resolve(root, "tsconfig.build.json")]);
 
 function moduleId(filePath) {
   return relative(compiled, filePath).split(sep).join("/");
