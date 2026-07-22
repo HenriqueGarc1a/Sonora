@@ -115,36 +115,3 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var
 .floating-empty-state p { max-width: 270px; margin: 0 auto; color: var(--muted); font-size: 9px; line-height: 1.45; }
 
 .panel-content { display: contents; }
-
-
-/* Loop A-B */
-.loop-card {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid var(--line);
-}
-.loop-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.loop-card__header > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
-.loop-card__header strong { font-size: 11px; font-weight: 700; }
-.loop-card__header small { color: var(--muted); font-size: 9px; line-height: 1.35; }
-.loop-switch { position: relative; flex: 0 0 auto; cursor: pointer; }
-.loop-switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.loop-switch span { position: relative; display: block; width: 36px; height: 20px; border-radius: 999px; background: var(--surface-raised); transition: background 150ms ease; }
-.loop-switch span::after { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); content: ""; transition: transform 150ms ease, background 150ms ease; }
-.loop-switch input:checked + span { background: var(--accent); }
-.loop-switch input:checked + span::after { background: var(--on-accent); transform: translateX(16px); }
-.loop-switch input:disabled + span { opacity: .42; cursor: not-allowed; }
-.loop-switch input:focus-visible + span { outline: 2px solid var(--text); outline-offset: 2px; }
-.loop-times { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 12px; }
-.loop-times > div { display: flex; flex-direction: column; gap: 4px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--control-bg); }
-.loop-times span { color: var(--muted); font-size: 8px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; }
-.loop-times strong { color: var(--accent); font-size: 11px; font-variant-numeric: tabular-nums; }
-.loop-actions { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; margin-top: 8px; }
-.loop-actions button { min-width: 0; padding: 7px 8px; border: 1px solid var(--line); border-radius: 9px; background: var(--control-bg); color: var(--text); cursor: pointer; font-size: 8.5px; font-weight: 700; }
-.loop-actions button:hover { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
-.loop-actions .loop-clear:hover { border-color: var(--danger-line); background: var(--danger-soft); color: var(--danger); }

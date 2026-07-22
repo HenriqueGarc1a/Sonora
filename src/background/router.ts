@@ -1,5 +1,5 @@
 import { getState, startCapture, stopCapture, updateSettings } from "./capture";
-import { getPlaybackPosition, resetPlaybackSettings } from "./contentBridge";
+import { resetPlaybackSettings } from "./contentBridge";
 import { deleteCustomPreset, saveCustomPreset } from "./presets";
 import { resetUiLayout, restoreFloatingPanels, saveFloatingPosition, setPanelFloating, updatePanelOrder } from "./layout";
 import { getUiPreferences } from "./storage";
@@ -14,9 +14,6 @@ export async function handleMessage(message: any, sender: any): Promise<any> {
     case "START_CAPTURE": return startCapture(tabId, message.settings);
     case "STOP_CAPTURE": return stopCapture();
     case "UPDATE_SETTINGS": return updateSettings(tabId, message.settings);
-    case "GET_PLAYBACK_POSITION":
-      if (!Number.isInteger(tabId)) throw new Error("Não encontrei uma aba válida para ler a reprodução.");
-      return getPlaybackPosition(tabId);
     case "UPDATE_THEME": return updateTheme(tabId, message.theme);
     case "SAVE_CUSTOM_PRESET": return saveCustomPreset(message.name, message.settings);
     case "DELETE_CUSTOM_PRESET": return deleteCustomPreset(message.presetId);

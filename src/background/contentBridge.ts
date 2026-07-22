@@ -18,15 +18,7 @@ export async function applyPlaybackSettings(tabId: number, settings: AudioSettin
     type: "APPLY_PLAYBACK_SETTINGS",
     speed: settings.speed,
     preservePitch: settings.preservePitch,
-    loopEnabled: settings.loopEnabled,
-    loopStart: settings.loopStart,
-    loopEnd: settings.loopEnd,
   });
-}
-
-export async function getPlaybackPosition(tabId: number): Promise<{ currentTime: number; duration: number | null; hasMedia: boolean }> {
-  await ensureContentController(tabId);
-  return chrome.tabs.sendMessage(tabId, { target: "content", type: "GET_PLAYBACK_POSITION" });
 }
 
 export async function resetPlaybackSettings(tabId: number | null | undefined): Promise<void> {

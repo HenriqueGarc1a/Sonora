@@ -26,8 +26,6 @@ export function ControlsView({ controller }: { controller: any }): any {
               dragging={layout.draggingPanelId === panelId}
               onNumericChange={audio.updateNumericSetting}
               onBooleanChange={audio.updateBooleanSetting}
-              onMarkLoopPoint={audio.markLoopPoint}
-              onClearLoop={audio.clearLoop}
               onFloat={() => layout.toggleFloatingPanel(panelId)}
               onDragStart={(event: any) => layout.startPanelDrag(panelId, event)}
               onDragEnd={layout.finishPanelDrag}
