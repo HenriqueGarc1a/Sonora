@@ -38,7 +38,7 @@ Todo o áudio permanece no navegador. A extensão não usa servidor nem envia gr
 3. Ajuste os controles e feche o popup quando quiser; o processamento continua ativo.
 4. Para ouvir o áudio sem ajustes, clique em **Neutro**. Esse preset também restaura o volume para 100%, a velocidade para 1× e desliga a preservação de pitch.
 5. Use o botão **+** após os presets para salvar os ajustes atuais com um nome.
-6. Arraste uma caixa pelo puxador para mudar sua ordem. Ao levá-la para fora do menu, ela fica fixada sobre a página; o botão no canto superior direito oferece a mesma ação.
+6. Arraste uma caixa pelo puxador para mudar sua ordem. Para fixá-la sobre a página, use exclusivamente o botão no canto superior direito; enquanto estiver flutuando, ela não aparece no menu central.
 7. Abra a engrenagem para remover presets personalizados, restaurar o layout ou consultar as licenças.
 8. O processamento termina quando a guia é fechada.
 

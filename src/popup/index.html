@@ -52,7 +52,7 @@
           <section class="control-section" data-panel-id="playback" aria-labelledby="playbackTitle">
             <div class="section-heading">
               <div class="section-title">
-                <button class="drag-handle" type="button" draggable="true" aria-label="Arrastar Reprodução para reordenar ou fixar na página" title="Arraste para reordenar ou leve para fora do menu">
+                <button class="drag-handle" type="button" draggable="true" aria-label="Arrastar Reprodução para reordenar" title="Arraste para reordenar">
                   <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
                 </button>
                 <h2 id="playbackTitle">Reprodução</h2>
@@ -91,7 +91,7 @@
           <section class="control-section" data-panel-id="equalizer" aria-labelledby="toneTitle">
             <div class="section-heading">
               <div class="section-title">
-                <button class="drag-handle" type="button" draggable="true" aria-label="Arrastar Equalizador para reordenar ou fixar na página" title="Arraste para reordenar ou leve para fora do menu">
+                <button class="drag-handle" type="button" draggable="true" aria-label="Arrastar Equalizador para reordenar" title="Arraste para reordenar">
                   <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
                 </button>
                 <h2 id="toneTitle">Equalizador</h2>
@@ -117,7 +117,7 @@
           <section class="control-section" data-panel-id="environment" aria-labelledby="spaceTitle">
             <div class="section-heading">
               <div class="section-title">
-                <button class="drag-handle" type="button" draggable="true" aria-label="Arrastar Ambiente para reordenar ou fixar na página" title="Arraste para reordenar ou leve para fora do menu">
+                <button class="drag-handle" type="button" draggable="true" aria-label="Arrastar Ambiente para reordenar" title="Arraste para reordenar">
                   <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
                 </button>
                 <h2 id="spaceTitle">Ambiente</h2>
@@ -139,7 +139,7 @@
           <section class="control-section stereo-section" data-panel-id="stereo" aria-labelledby="stereoTitle">
             <div class="section-heading">
               <div class="section-title">
-                <button class="drag-handle" type="button" draggable="true" aria-label="Arrastar Imagem estéreo para reordenar ou fixar na página" title="Arraste para reordenar ou leve para fora do menu">
+                <button class="drag-handle" type="button" draggable="true" aria-label="Arrastar Imagem estéreo para reordenar" title="Arraste para reordenar">
                   <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
                 </button>
                 <h2 id="stereoTitle">Imagem estéreo</h2>
@@ -159,7 +159,13 @@
           </section>
         </div>
 
-        <footer><span>Arraste pelo puxador para organizar ou fixar.</span><span>v0.4</span></footer>
+        <div class="floating-empty-state" id="floatingEmptyState" hidden>
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <strong>Todos os controles estão na página</strong>
+          <p>Feche um painel flutuante ou restaure o layout nas configurações para trazê-lo de volta.</p>
+        </div>
+
+        <footer><span>Arraste pelo puxador apenas para organizar.</span><span>v0.4</span></footer>
       </div>
 
       <div class="settings-view" id="settingsView" hidden>

@@ -48,6 +48,7 @@ const elements = {
   customPresetCount: document.querySelector("#customPresetCount"),
   emptyPresetState: document.querySelector("#emptyPresetState"),
   errorMessage: document.querySelector("#errorMessage"),
+  floatingEmptyState: document.querySelector("#floatingEmptyState"),
   homeButton: document.querySelector("#homeButton"),
   panelList: document.querySelector("#panelList"),
   presetDialog: document.querySelector("#presetDialog"),
@@ -334,7 +335,6 @@ function startPanelDrag(event) {
     return;
   }
   const panelId = panel.dataset.panelId;
-  const wasFloating = isPanelFloating(panelId);
   event.dataTransfer.effectAllowed = "move";
   event.dataTransfer.setData("text/sonora-panel", panelId);
   panel.classList.add("dragging");
@@ -342,9 +342,7 @@ function startPanelDrag(event) {
   dragState = {
     panel,
     panelId,
-    wasFloating,
     droppedInside: false,
-    floatPromise: setPanelFloating(panelId, true, { quiet: true }),
   };
 }
 
@@ -370,10 +368,6 @@ async function dropPanelInsidePopup(event) {
   const currentDrag = dragState;
   event.preventDefault();
   currentDrag.droppedInside = true;
-  await currentDrag.floatPromise.catch(() => undefined);
-  if (!currentDrag.wasFloating) {
-    await setPanelFloating(currentDrag.panelId, false, { quiet: true });
-  }
   await savePanelOrder();
 }
 
@@ -386,7 +380,7 @@ function finishPanelDrag() {
     panel.classList.remove("drag-over");
   }
   if (!dragState.droppedInside) {
-    showToast(`${panelTitle(dragState.panelId)} foi fixado na página.`);
+    applyPanelOrder();
   }
   dragState = null;
 }
@@ -459,14 +453,18 @@ function applyPanelOrder() {
 }
 
 function renderFloatingPanels() {
+  let visiblePanels = 0;
   for (const panel of elements.panelList.querySelectorAll("[data-panel-id]")) {
     const floating = isPanelFloating(panel.dataset.panelId);
-    panel.classList.toggle("is-floating", floating);
+    panel.hidden = floating;
+    if (!floating) {
+      visiblePanels += 1;
+    }
     const button = panel.querySelector("[data-float-panel]");
-    button?.classList.toggle("active", floating);
     button?.setAttribute("aria-pressed", String(floating));
     button?.setAttribute("title", floating ? "Remover da página" : "Fixar na página");
   }
+  elements.floatingEmptyState.hidden = visiblePanels > 0;
 }
 
 function isPanelFloating(panelId) {

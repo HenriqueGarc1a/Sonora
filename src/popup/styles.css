@@ -137,20 +137,6 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 }
 .control-section.dragging { opacity: 0.48; transform: scale(0.985); }
 .control-section.drag-over { border-color: rgba(200, 255, 61, 0.42); }
-.control-section.is-floating::after {
-  position: absolute;
-  right: 15px;
-  bottom: -1px;
-  padding: 3px 7px;
-  border-radius: 7px 7px 0 0;
-  background: var(--accent);
-  color: #111204;
-  content: "FIXO NA PÁGINA";
-  font-size: 7px;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-}
-
 .section-heading, .section-title, .control-label { display: flex; align-items: center; justify-content: space-between; }
 .section-heading { margin-bottom: 16px; }
 .section-title { justify-content: flex-start; gap: 9px; }
@@ -225,6 +211,11 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid whi
 .centered-range::-webkit-slider-thumb { border-color: #f4f3ef; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1); }
 
 .error-message { margin: 0 0 12px; padding: 8px 10px; border: 1px solid rgba(255,123,123,.22); border-radius: 9px; background: rgba(255,123,123,.08); color: var(--danger); font-size: 10px; line-height: 1.45; }
+
+.floating-empty-state { margin-bottom: 12px; padding: 24px 20px; border: 1px dashed rgba(200,255,61,.22); border-radius: 18px; background: rgba(200,255,61,.035); text-align: center; }
+.floating-empty-state .brand-mark { justify-content: center; margin: 0 auto 11px; }
+.floating-empty-state strong { display: block; margin-bottom: 5px; font-size: 12px; }
+.floating-empty-state p { max-width: 270px; margin: 0 auto; color: var(--muted); font-size: 9px; line-height: 1.45; }
 
 .settings-title { padding: 6px 2px 18px; }
 .settings-title h1 { margin: 5px 0 4px; font-size: 22px; letter-spacing: -.04em; }
