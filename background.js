@@ -49,6 +49,7 @@ chrome.tabCapture.onStatusChanged.addListener(async (info) => {
     return;
   }
 
+  await resetPlaybackSettings(info.tabId).catch(() => undefined);
   const { capturedTabId } = await chrome.storage.session.get("capturedTabId");
   if (capturedTabId === info.tabId) {
     await chrome.storage.session.remove("capturedTabId");
@@ -80,6 +81,7 @@ async function handleMessage(message) {
     case "UPDATE_SETTINGS":
       return updateSettings(message.tabId, message.settings);
     case "CAPTURE_ENDED":
+      await resetPlaybackSettings(message.tabId).catch(() => undefined);
       await chrome.storage.session.remove("capturedTabId");
       return { active: false };
     default:
@@ -129,9 +131,7 @@ async function startCapture(tabId, incomingSettings) {
   await sendToOffscreen({ type: "STOP_CAPTURE" }).catch(() => undefined);
 
   if (Number.isInteger(previousTabId) && previousTabId !== tabId) {
-    await applyPlaybackSettings(previousTabId, DEFAULT_SETTINGS).catch(
-      () => undefined,
-    );
+    await resetPlaybackSettings(previousTabId).catch(() => undefined);
   }
 
   await sendToOffscreen({
@@ -148,9 +148,11 @@ async function startCapture(tabId, incomingSettings) {
 }
 
 async function stopCapture() {
+  const { capturedTabId } = await chrome.storage.session.get("capturedTabId");
   if (await hasOffscreenDocument()) {
     await sendToOffscreen({ type: "STOP_CAPTURE" }).catch(() => undefined);
   }
+  await resetPlaybackSettings(capturedTabId).catch(() => undefined);
   await chrome.storage.session.remove("capturedTabId");
   return { active: false, capturedTabId: null };
 }
@@ -182,6 +184,17 @@ async function applyPlaybackSettings(tabId, settings) {
     type: "APPLY_PLAYBACK_SETTINGS",
     speed: settings.speed,
     preservePitch: settings.preservePitch,
+  });
+}
+
+async function resetPlaybackSettings(tabId) {
+  if (!Number.isInteger(tabId)) {
+    return;
+  }
+
+  await chrome.tabs.sendMessage(tabId, {
+    target: "content",
+    type: "RESET_PLAYBACK_SETTINGS",
   });
 }
 
