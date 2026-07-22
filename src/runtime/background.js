@@ -4,6 +4,11 @@ const THEME_PATH = "src/shared/theme.js";
 
 importScripts(chrome.runtime.getURL(THEME_PATH));
 
+const themeApi = globalThis.SonoraTheme;
+if (!themeApi) {
+  throw new Error("Não foi possível carregar o tema da Sonora.");
+}
+
 const DEFAULT_SETTINGS = Object.freeze({
   volume: 100,
   speed: 1,
@@ -51,7 +56,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     settings: normalizeSettings(stored.settings),
     customPresets: normalizeCustomPresets(stored.customPresets),
     uiPreferences: normalizeUiPreferences(stored.uiPreferences),
-    theme: SonoraTheme.normalize(stored.theme),
+    theme: themeApi.normalize(stored.theme),
   });
 });
 
@@ -317,11 +322,11 @@ function normalizeSettings(settings = {}) {
 
 async function getTheme() {
   const { theme } = await chrome.storage.local.get("theme");
-  return SonoraTheme.normalize(theme);
+  return themeApi.normalize(theme);
 }
 
 async function saveTheme(theme) {
-  const normalized = SonoraTheme.normalize(theme);
+  const normalized = themeApi.normalize(theme);
   await chrome.storage.local.set({ theme: normalized });
   return normalized;
 }

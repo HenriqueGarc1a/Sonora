@@ -294,3 +294,5 @@ footer { display: flex; align-items: center; justify-content: space-between; pad
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+.panel-content { display: contents; }

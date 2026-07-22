@@ -1,0 +1,15 @@
+{
+  "name": "sonora-extension",
+  "version": "0.6.0",
+  "private": true,
+  "description": "Extensão Chrome Sonora com popup em React e TypeScript.",
+  "scripts": {
+    "clean": "node scripts/build.mjs --clean",
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/build.mjs",
+    "zip": "node scripts/build.mjs --zip"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

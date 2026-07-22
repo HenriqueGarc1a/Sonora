@@ -3,6 +3,12 @@
     return;
   }
 
+  const themeApi = globalThis.SonoraTheme;
+  if (!themeApi) {
+    console.error("Sonora: o módulo de tema não foi carregado.");
+    return;
+  }
+
   const DEFAULT_SETTINGS = Object.freeze({
     volume: 100,
     speed: 1,
@@ -57,7 +63,7 @@
     preservePitch: true,
   };
   let audioSettings = { ...DEFAULT_SETTINGS };
-  let uiTheme = SonoraTheme.normalize();
+  let uiTheme = themeApi.normalize();
   let floatingUpdateTimer = null;
 
   function applyToMedia(element) {
@@ -182,7 +188,7 @@
       colorScheme: "dark",
     });
 
-    SonoraTheme.apply(host, uiTheme);
+    themeApi.apply(host, uiTheme);
     const root = host.attachShadow({ mode: "closed" });
     root.innerHTML = `
       <style>${floatingPanelStyles()}</style>
@@ -322,9 +328,9 @@
   }
 
   function syncFloatingTheme(incomingTheme = uiTheme) {
-    uiTheme = SonoraTheme.normalize(incomingTheme);
+    uiTheme = themeApi.normalize(incomingTheme);
     for (const record of floatingPanels.values()) {
-      SonoraTheme.apply(record.host, uiTheme);
+      themeApi.apply(record.host, uiTheme);
     }
   }
 
