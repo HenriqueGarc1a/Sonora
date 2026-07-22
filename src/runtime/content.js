@@ -57,6 +57,7 @@
     preservePitch: true,
   };
   let audioSettings = { ...DEFAULT_SETTINGS };
+  let uiTheme = SonoraTheme.normalize();
   let floatingUpdateTimer = null;
 
   function applyToMedia(element) {
@@ -151,12 +152,13 @@
     managedElements.clear();
   }
 
-  function showFloatingPanel(panelId, incomingSettings, savedPosition) {
+  function showFloatingPanel(panelId, incomingSettings, savedPosition, incomingTheme) {
     const definition = PANEL_DEFINITIONS[panelId];
     if (!definition) {
       return;
     }
     syncFloatingSettings(incomingSettings);
+    syncFloatingTheme(incomingTheme);
 
     const existing = floatingPanels.get(panelId);
     if (existing) {
@@ -180,6 +182,7 @@
       colorScheme: "dark",
     });
 
+    SonoraTheme.apply(host, uiTheme);
     const root = host.attachShadow({ mode: "closed" });
     root.innerHTML = `
       <style>${floatingPanelStyles()}</style>
@@ -318,6 +321,13 @@
     updateAllFloatingPanels();
   }
 
+  function syncFloatingTheme(incomingTheme = uiTheme) {
+    uiTheme = SonoraTheme.normalize(incomingTheme);
+    for (const record of floatingPanels.values()) {
+      SonoraTheme.apply(record.host, uiTheme);
+    }
+  }
+
   function updateAllFloatingPanels() {
     for (const record of floatingPanels.values()) {
       updateFloatingPanel(record);
@@ -378,41 +388,55 @@
 
   function floatingPanelStyles() {
     return `
-      :host { color-scheme: dark; }
+      :host {
+        --bg: var(--theme-background);
+        --surface: var(--theme-surface);
+        --text: var(--theme-text);
+        --muted: color-mix(in srgb, var(--text) 58%, var(--bg));
+        --accent: var(--theme-accent);
+        --danger: var(--theme-danger);
+        --on-accent: var(--theme-on-accent);
+        --surface-raised: color-mix(in srgb, var(--surface) 88%, var(--text));
+        --line: color-mix(in srgb, var(--text) 9%, transparent);
+        --track: color-mix(in srgb, var(--text) 13%, transparent);
+        --control-bg: color-mix(in srgb, var(--text) 2.5%, transparent);
+        --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+        --danger-soft: color-mix(in srgb, var(--danger) 8%, transparent);
+        --danger-line: color-mix(in srgb, var(--danger) 30%, transparent);
+      }
       * { box-sizing: border-box; }
       button, input { font: inherit; }
       .panel {
         overflow: hidden;
-        border: 1px solid rgba(255,255,255,.14);
+        border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
         border-radius: 16px;
-        background: #121215;
-        color: #f6f4f2;
-        box-shadow: 0 18px 60px rgba(0,0,0,.52);
+        background: var(--surface);
+        color: var(--text);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
-      .titlebar { display: flex; align-items: center; justify-content: space-between; min-height: 43px; padding: 8px 9px 8px 12px; border-bottom: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.025); cursor: grab; user-select: none; touch-action: none; }
+      .titlebar { display: flex; align-items: center; justify-content: space-between; min-height: 43px; padding: 8px 9px 8px 12px; border-bottom: 1px solid var(--line); background: var(--control-bg); cursor: grab; user-select: none; touch-action: none; }
       .titlebar:active { cursor: grabbing; }
       .brand { display: flex; align-items: center; gap: 6px; min-width: 0; }
-      .brand i { width: 4px; height: 15px; border-radius: 9px; background: #c8ff3d; box-shadow: -6px 3px 0 -1px #c8ff3d, 6px 1px 0 -1px #c8ff3d; }
+      .brand i { width: 4px; height: 15px; border-radius: 9px; background: var(--accent); box-shadow: -6px 3px 0 -1px var(--accent), 6px 1px 0 -1px var(--accent); }
       .brand strong { margin-left: 5px; font-size: 9px; letter-spacing: .12em; }
-      .brand small { overflow: hidden; color: #8f8f9a; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-      .close { display: grid; width: 26px; height: 26px; place-items: center; border: 1px solid rgba(255,255,255,.09); border-radius: 8px; background: rgba(255,255,255,.025); color: #8f8f9a; cursor: pointer; font-size: 16px; line-height: 1; }
-      .close:hover { border-color: rgba(255,123,123,.3); background: rgba(255,123,123,.08); color: #ff7b7b; }
-      .close:focus-visible, input:focus-visible { outline: 2px solid #c8ff3d; outline-offset: 2px; }
+      .brand small { overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+      .close { display: grid; width: 26px; height: 26px; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--control-bg); color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; }
+      .close:hover { border-color: var(--danger-line); background: var(--danger-soft); color: var(--danger); }
+      .close:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       .fields { display: grid; gap: 14px; padding: 14px; }
       .range-field { display: grid; gap: 8px; }
       .range-field > span { display: flex; align-items: center; justify-content: space-between; }
       .range-field strong, .check-field > span { font-size: 11px; font-weight: 650; }
-      output { color: #c8ff3d; font-size: 10px; font-variant-numeric: tabular-nums; font-weight: 750; }
-      input[type="range"] { --progress: 50%; width: 100%; height: 4px; margin: 4px 0; border-radius: 99px; outline: none; appearance: none; background: linear-gradient(to right,#c8ff3d 0,#c8ff3d var(--progress),rgba(255,255,255,.13) var(--progress),rgba(255,255,255,.13) 100%); }
-      input[type="range"]::-webkit-slider-thumb { width: 15px; height: 15px; border: 3px solid #c8ff3d; border-radius: 50%; appearance: none; background: #111113; cursor: grab; }
+      output { color: var(--accent); font-size: 10px; font-variant-numeric: tabular-nums; font-weight: 750; }
+      input[type="range"] { --progress: 50%; width: 100%; height: 4px; margin: 4px 0; border-radius: 99px; outline: none; appearance: none; background: linear-gradient(to right,var(--accent) 0,var(--accent) var(--progress),var(--track) var(--progress),var(--track) 100%); }
+      input[type="range"]::-webkit-slider-thumb { width: 15px; height: 15px; border: 3px solid var(--accent); border-radius: 50%; appearance: none; background: var(--bg); cursor: grab; }
       .check-field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; cursor: pointer; }
       .check-field input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-      .check-field i { position: relative; width: 34px; height: 19px; border-radius: 99px; background: #34343b; }
-      .check-field i::after { position: absolute; top: 3px; left: 3px; width: 13px; height: 13px; border-radius: 50%; background: #aaaab1; content: ""; transition: transform .15s ease; }
-      .check-field input:checked + i { background: #c8ff3d; }
-      .check-field input:checked + i::after { background: #101204; transform: translateX(15px); }
-      footer { padding: 0 14px 11px; color: #696971; font-size: 8px; }
+      .check-field i { position: relative; width: 34px; height: 19px; border-radius: 99px; background: var(--surface-raised); }
+      .check-field i::after { position: absolute; top: 3px; left: 3px; width: 13px; height: 13px; border-radius: 50%; background: var(--muted); content: ""; transition: transform .15s ease; }
+      .check-field input:checked + i { background: var(--accent); }
+      .check-field input:checked + i::after { background: var(--on-accent); transform: translateX(15px); }
+      footer { padding: 0 14px 11px; color: var(--muted); font-size: 8px; }
       @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
     `;
   }
@@ -449,7 +473,7 @@
         sendResponse({ applied: true });
         break;
       case "SHOW_FLOATING_PANEL":
-        showFloatingPanel(message.panelId, message.settings, message.position);
+        showFloatingPanel(message.panelId, message.settings, message.position, message.theme);
         sendResponse({ visible: true });
         break;
       case "HIDE_FLOATING_PANEL":
@@ -462,6 +486,10 @@
         break;
       case "SYNC_SONORA_SETTINGS":
         syncFloatingSettings(message.settings);
+        sendResponse({ synced: true });
+        break;
+      case "SYNC_SONORA_THEME":
+        syncFloatingTheme(message.theme);
         sendResponse({ synced: true });
         break;
       default:

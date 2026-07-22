@@ -58,27 +58,34 @@ const elements = {
   presetNameError: document.querySelector("#presetNameError"),
   presetState: document.querySelector("#presetState"),
   resetLayoutButton: document.querySelector("#resetLayoutButton"),
+  resetThemeButton: document.querySelector("#resetThemeButton"),
   savedPresetList: document.querySelector("#savedPresetList"),
   settingsButton: document.querySelector("#settingsButton"),
   settingsView: document.querySelector("#settingsView"),
   statusChip: document.querySelector("#statusChip"),
   statusText: document.querySelector("#statusText"),
+  themeColorList: document.querySelector("#themeColorList"),
+  palettePreview: document.querySelector("#palettePreview"),
   toast: document.querySelector("#toast"),
 };
 
 const controls = [...document.querySelectorAll("[data-setting]")];
 const speedButtons = [...document.querySelectorAll("[data-speed]")];
+const settingsTabButtons = [...document.querySelectorAll("[data-settings-tab]")];
+const settingsPanels = [...document.querySelectorAll("[data-settings-panel]")];
 let activeTabId = null;
 let captureActive = false;
 let capturedTabId = null;
 let customPresets = [];
 let settings = { ...DEFAULT_SETTINGS };
+let theme = SonoraTheme.normalize();
 let uiPreferences = {
   panelOrder: [...DEFAULT_PANEL_ORDER],
   floatingPanels: [],
 };
 let pendingPresetValues = null;
 let updateTimer = null;
+let themeUpdateTimer = null;
 let toastTimer = null;
 let dragState = null;
 
@@ -90,6 +97,7 @@ initialize().catch((error) => {
 });
 
 async function initialize() {
+  buildThemeEditor();
   bindEvents();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -101,6 +109,7 @@ async function initialize() {
   capturedTabId = response.capturedTabId;
   customPresets = Array.isArray(response.customPresets) ? response.customPresets : [];
   uiPreferences = normalizeUiPreferences(response.uiPreferences);
+  applyTheme(response.theme);
 
   applyPanelOrder();
   renderCustomPresets();
@@ -164,6 +173,26 @@ function bindEvents() {
   });
 
   elements.resetLayoutButton.addEventListener("click", resetLayout);
+  elements.resetThemeButton.addEventListener("click", resetTheme);
+
+  for (const button of settingsTabButtons) {
+    button.addEventListener("click", () => showSettingsTab(button.dataset.settingsTab));
+  }
+
+  elements.themeColorList.addEventListener("input", (event) => {
+    const input = event.target.closest("[data-theme-color]");
+    if (!input) {
+      return;
+    }
+    theme[input.dataset.themeColor] = input.value;
+    applyTheme(theme);
+    queueThemeUpdate();
+  });
+  elements.themeColorList.addEventListener("change", (event) => {
+    if (event.target.closest("[data-theme-color]")) {
+      queueThemeUpdate(0);
+    }
+  });
 
   for (const button of document.querySelectorAll("[data-float-panel]")) {
     button.addEventListener("click", () => toggleFloatingPanel(button.dataset.floatPanel));
@@ -471,6 +500,92 @@ function isPanelFloating(panelId) {
   return uiPreferences.floatingPanels.some((item) => item.id === panelId);
 }
 
+function buildThemeEditor() {
+  elements.themeColorList.replaceChildren();
+  elements.palettePreview.replaceChildren();
+
+  for (const field of SonoraTheme.FIELDS) {
+    const preview = document.createElement("span");
+    preview.dataset.themePreview = field.key;
+    preview.title = field.label;
+    elements.palettePreview.append(preview);
+
+    const row = document.createElement("label");
+    row.className = "theme-color-row";
+
+    const input = document.createElement("input");
+    input.type = "color";
+    input.dataset.themeColor = field.key;
+    input.setAttribute("aria-label", field.label);
+
+    const copy = document.createElement("span");
+    copy.className = "theme-color-copy";
+    const label = document.createElement("strong");
+    label.textContent = field.label;
+    const description = document.createElement("small");
+    description.textContent = field.description;
+    copy.append(label, description);
+
+    const value = document.createElement("code");
+    value.className = "theme-color-value";
+    value.dataset.themeValue = field.key;
+
+    row.append(input, copy, value);
+    elements.themeColorList.append(row);
+  }
+}
+
+function applyTheme(nextTheme) {
+  theme = SonoraTheme.apply(document.documentElement, nextTheme);
+  renderThemeEditor();
+}
+
+function renderThemeEditor() {
+  for (const field of SonoraTheme.FIELDS) {
+    const input = elements.themeColorList.querySelector(`[data-theme-color="${field.key}"]`);
+    const value = elements.themeColorList.querySelector(`[data-theme-value="${field.key}"]`);
+    const preview = elements.palettePreview.querySelector(`[data-theme-preview="${field.key}"]`);
+    if (input) input.value = theme[field.key];
+    if (value) value.textContent = theme[field.key];
+    if (preview) preview.style.background = theme[field.key];
+  }
+}
+
+function showSettingsTab(tabName) {
+  for (const button of settingsTabButtons) {
+    const active = button.dataset.settingsTab === tabName;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  }
+  for (const panel of settingsPanels) {
+    panel.hidden = panel.dataset.settingsPanel !== tabName;
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function queueThemeUpdate(delay = 65) {
+  window.clearTimeout(themeUpdateTimer);
+  themeUpdateTimer = window.setTimeout(async () => {
+    try {
+      const response = await sendToBackground({
+        type: "UPDATE_THEME",
+        tabId: activeTabId,
+        theme,
+      });
+      applyTheme(response.theme);
+      clearError();
+    } catch (error) {
+      showError(error.message);
+    }
+  }, delay);
+}
+
+function resetTheme() {
+  applyTheme(SonoraTheme.DEFAULT_THEME);
+  queueThemeUpdate(0);
+  showToast("Cores padrão restauradas.");
+}
+
 function queueSettingsUpdate(delay = 65) {
   window.clearTimeout(updateTimer);
   updateTimer = window.setTimeout(async () => {
@@ -589,6 +704,7 @@ function renderActivationError() {
 }
 
 function showSettings(show) {
+  if (show) showSettingsTab("general");
   elements.controlsView.hidden = show;
   elements.settingsView.hidden = !show;
   elements.settingsButton.classList.toggle("active", show);

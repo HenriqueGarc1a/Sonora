@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sonora — Controle de Áudio",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Controle volume, velocidade, pitch, equalização, reverb e imagem estéreo na aba atual.",
   "minimum_chrome_version": "116",
   "permissions": [

@@ -19,7 +19,9 @@ Extensão Chrome Manifest V3 que processa localmente o áudio da aba atual.
 - Atalhos para as velocidades mais usadas.
 - Caixas reordenáveis, sem numeração, com a ordem persistida automaticamente.
 - Controles que podem ser fixados como painéis flutuantes e arrastáveis sobre a página.
-- Área de configurações para gerenciar presets, restaurar o layout e consultar a licença.
+- Área de configurações com abas **Geral** e **Estilos**.
+- Paleta personalizada com 5 cores base: fundo, superfície, texto principal, destaque e erro. O texto secundário é derivado automaticamente.
+- Bordas, sombras, trilhas, estados e painéis flutuantes derivados automaticamente da paleta.
 
 Todo o áudio permanece no navegador. A extensão não usa servidor nem envia gravações.
 
@@ -39,8 +41,9 @@ Todo o áudio permanece no navegador. A extensão não usa servidor nem envia gr
 4. Para ouvir o áudio sem ajustes, clique em **Neutro**. Esse preset também restaura o volume para 100%, a velocidade para 1× e desliga a preservação de pitch.
 5. Use o botão **+** após os presets para salvar os ajustes atuais com um nome.
 6. Arraste uma caixa pelo puxador para mudar sua ordem. Para fixá-la sobre a página, use exclusivamente o botão no canto superior direito; enquanto estiver flutuando, ela não aparece no menu central.
-7. Abra a engrenagem para remover presets personalizados, restaurar o layout ou consultar as licenças.
-8. O processamento termina quando a guia é fechada.
+7. Abra a engrenagem e entre em **Estilos** para trocar todas as cores da interface.
+8. Na aba **Geral**, remova presets personalizados, restaure o layout ou consulte as licenças.
+9. O processamento termina quando a guia é fechada.
 
 O clique no ícone fornece a ação explícita exigida pelo Chrome para iniciar a captura. A versão atual processa uma guia por vez; abrir a Sonora em outra guia transfere o processamento para ela.
 

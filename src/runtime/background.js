@@ -1,5 +1,8 @@
 const OFFSCREEN_PATH = "src/audio/offscreen.html";
 const CONTENT_PATH = "src/runtime/content.js";
+const THEME_PATH = "src/shared/theme.js";
+
+importScripts(chrome.runtime.getURL(THEME_PATH));
 
 const DEFAULT_SETTINGS = Object.freeze({
   volume: 100,
@@ -42,11 +45,13 @@ chrome.runtime.onInstalled.addListener(async () => {
     "settings",
     "customPresets",
     "uiPreferences",
+    "theme",
   ]);
   await chrome.storage.local.set({
     settings: normalizeSettings(stored.settings),
     customPresets: normalizeCustomPresets(stored.customPresets),
     uiPreferences: normalizeUiPreferences(stored.uiPreferences),
+    theme: SonoraTheme.normalize(stored.theme),
   });
 });
 
@@ -105,6 +110,8 @@ async function handleMessage(message, sender) {
       return stopCapture();
     case "UPDATE_SETTINGS":
       return updateSettings(tabId, message.settings);
+    case "UPDATE_THEME":
+      return updateTheme(tabId, message.theme);
     case "SAVE_CUSTOM_PRESET":
       return saveCustomPreset(message.name, message.settings);
     case "DELETE_CUSTOM_PRESET":
@@ -130,11 +137,12 @@ async function handleMessage(message, sender) {
 }
 
 async function getState(tabId) {
-  const [settings, capturedTabs, customPresets, uiPreferences] = await Promise.all([
+  const [settings, capturedTabs, customPresets, uiPreferences, theme] = await Promise.all([
     getSettings(),
     chrome.tabCapture.getCapturedTabs(),
     getCustomPresets(),
     getUiPreferences(),
+    getTheme(),
   ]);
   const capture = capturedTabs.find(
     (item) => item.status === "active" || item.status === "pending",
@@ -150,6 +158,7 @@ async function getState(tabId) {
     settings,
     customPresets,
     uiPreferences,
+    theme,
     active: Boolean(capture),
     capturedTabId: capture?.tabId ?? null,
     currentTabActive: Boolean(capture && capture.tabId === tabId),
@@ -250,7 +259,7 @@ async function ensureContentController(tabId) {
 
   await chrome.scripting.executeScript({
     target: { tabId },
-    files: [CONTENT_PATH],
+    files: [THEME_PATH, CONTENT_PATH],
   });
 }
 
@@ -304,6 +313,29 @@ function normalizeSettings(settings = {}) {
     ? settings.nightMode
     : DEFAULT_SETTINGS.nightMode;
   return result;
+}
+
+async function getTheme() {
+  const { theme } = await chrome.storage.local.get("theme");
+  return SonoraTheme.normalize(theme);
+}
+
+async function saveTheme(theme) {
+  const normalized = SonoraTheme.normalize(theme);
+  await chrome.storage.local.set({ theme: normalized });
+  return normalized;
+}
+
+async function updateTheme(tabId, incomingTheme) {
+  const theme = await saveTheme(incomingTheme);
+  if (Number.isInteger(tabId)) {
+    await chrome.tabs.sendMessage(tabId, {
+      target: "content",
+      type: "SYNC_SONORA_THEME",
+      theme,
+    }).catch(() => undefined);
+  }
+  return { theme };
 }
 
 async function getCustomPresets() {
@@ -397,6 +429,7 @@ async function setPanelFloating(tabId, panelId, floating) {
           panelId,
           position: existing?.position,
           settings: await getSettings(),
+          theme: await getTheme(),
         });
       } else {
         await chrome.tabs.sendMessage(tabId, {
@@ -426,7 +459,7 @@ async function saveFloatingPosition(panelId, position) {
   return { uiPreferences };
 }
 
-async function restoreFloatingPanels(tabId, providedSettings) {
+async function restoreFloatingPanels(tabId, providedSettings, providedTheme) {
   if (!Number.isInteger(tabId)) {
     return;
   }
@@ -435,6 +468,7 @@ async function restoreFloatingPanels(tabId, providedSettings) {
     return;
   }
   const settings = providedSettings || await getSettings();
+  const theme = providedTheme || await getTheme();
   await ensureContentController(tabId);
   for (const panel of uiPreferences.floatingPanels) {
     await chrome.tabs.sendMessage(tabId, {
@@ -443,6 +477,7 @@ async function restoreFloatingPanels(tabId, providedSettings) {
       panelId: panel.id,
       position: panel.position,
       settings,
+      theme,
     });
   }
 }

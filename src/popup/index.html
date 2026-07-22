@@ -165,44 +165,72 @@
           <p>Feche um painel flutuante ou restaure o layout nas configurações para trazê-lo de volta.</p>
         </div>
 
-        <footer><span>v0.4</span></footer>
+        <footer><span>v0.5</span></footer>
       </div>
 
       <div class="settings-view" id="settingsView" hidden>
         <div class="settings-title">
           <h1>Configurações</h1>
+          <p>Personalize o comportamento e a aparência da Sonora.</p>
         </div>
 
-        <section class="settings-card" aria-labelledby="customPresetsTitle">
-          <div class="settings-card-heading">
-            <div><h2 id="customPresetsTitle">Meus presets</h2></div>
-            <span class="count-badge" id="customPresetCount">0</span>
-          </div>
-          <div class="saved-preset-list" id="savedPresetList"></div>
-          <p class="empty-state" id="emptyPresetState">Você ainda não criou nenhum preset.</p>
-        </section>
+        <nav class="settings-tabs" aria-label="Seções das configurações">
+          <button class="active" type="button" data-settings-tab="general" aria-selected="true">Geral</button>
+          <button type="button" data-settings-tab="styles" aria-selected="false">Estilos</button>
+        </nav>
 
-        <section class="settings-card" aria-labelledby="layoutTitle">
-          <div class="settings-card-heading"><div><h2 id="layoutTitle">Layout</h2><p>A ordem e os painéis fixos são salvos automaticamente.</p></div></div>
-          <button class="secondary-button" id="resetLayoutButton" type="button">Restaurar layout padrão</button>
-        </section>
+        <div class="settings-panel" data-settings-panel="general">
+          <section class="settings-card" aria-labelledby="customPresetsTitle">
+            <div class="settings-card-heading">
+              <div><h2 id="customPresetsTitle">Meus presets</h2></div>
+              <span class="count-badge" id="customPresetCount">0</span>
+            </div>
+            <div class="saved-preset-list" id="savedPresetList"></div>
+            <p class="empty-state" id="emptyPresetState">Você ainda não criou nenhum preset.</p>
+          </section>
 
-        <section class="settings-card licenses-card" aria-labelledby="licensesTitle">
-          <div class="settings-card-heading"><div><h2 id="licensesTitle">licenças</h2></div></div>
-          <div class="license-summary">
-            <span class="license-mark">MIT</span>
-            <span><strong>Sonora</strong><small>Copyright © 2026 Sonora contributors</small></span>
-          </div>
-          <details>
-            <summary>Ver licença MIT</summary>
-            <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
-            <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
-            <p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
-          </details>
-          <div class="native-tech"><strong>Sem bibliotecas externas</strong><p>A interface usa JavaScript nativo, APIs de Extensões do Chrome e a Web Audio API. Nenhuma dependência de terceiros é empacotada.</p></div>
-        </section>
+          <section class="settings-card" aria-labelledby="layoutTitle">
+            <div class="settings-card-heading"><div><h2 id="layoutTitle">Layout</h2><p>A ordem e os painéis fixos são salvos automaticamente.</p></div></div>
+            <button class="secondary-button" id="resetLayoutButton" type="button">Restaurar layout padrão</button>
+          </section>
 
-        <footer><span>v0.4</span></footer>
+          <section class="settings-card licenses-card" aria-labelledby="licensesTitle">
+            <div class="settings-card-heading"><div><h2 id="licensesTitle">Licenças</h2></div></div>
+            <div class="license-summary">
+              <span class="license-mark">MIT</span>
+              <span><strong>Sonora</strong><small>Copyright © 2026 Sonora contributors</small></span>
+            </div>
+            <details>
+              <summary>Ver licença MIT</summary>
+              <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+              <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+              <p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+            </details>
+            <div class="native-tech"><strong>Sem bibliotecas externas</strong><p>A interface usa JavaScript nativo, APIs de Extensões do Chrome e a Web Audio API. Nenhuma dependência de terceiros é empacotada.</p></div>
+          </section>
+        </div>
+
+        <div class="settings-panel" data-settings-panel="styles" hidden>
+          <section class="settings-card styles-card" aria-labelledby="stylesTitle">
+            <div class="settings-card-heading">
+              <div>
+                <h2 id="stylesTitle">Paleta</h2>
+                <p>São apenas 5 cores base. Bordas, sombras, trilhas e estados são derivados automaticamente.</p>
+              </div>
+              <span class="count-badge">5</span>
+            </div>
+            <div class="palette-preview" id="palettePreview" aria-label="Prévia da paleta"></div>
+            <div class="theme-color-list" id="themeColorList"></div>
+            <button class="secondary-button" id="resetThemeButton" type="button">Restaurar cores padrão</button>
+          </section>
+
+          <section class="settings-card style-info-card" aria-labelledby="styleInfoTitle">
+            <div class="settings-card-heading"><div><h2 id="styleInfoTitle">Como funciona</h2></div></div>
+            <p>As cinco escolhas também são aplicadas aos painéis flutuantes. A Sonora calcula automaticamente as variações transparentes e escolhe texto legível sobre a cor de destaque.</p>
+          </section>
+        </div>
+
+        <footer><span>v0.5</span></footer>
       </div>
     </main>
 
@@ -223,6 +251,7 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <script src="../shared/theme.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>
