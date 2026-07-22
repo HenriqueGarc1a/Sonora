@@ -14,7 +14,6 @@ import { createPlaybackController } from "./playback/controller";
     release: playback.release,
     showFloatingPanel: floating.show,
     hideFloatingPanel: floating.hide,
-    getPlaybackPosition: playback.getPosition,
   };
 
   chrome.runtime.onMessage.addListener((message: any, _sender: any, sendResponse: any) => {
@@ -31,9 +30,6 @@ import { createPlaybackController } from "./playback/controller";
       case "RESET_PLAYBACK_SETTINGS":
         playback.release();
         sendResponse({ applied: true });
-        break;
-      case "GET_PLAYBACK_POSITION":
-        sendResponse(playback.getPosition());
         break;
       case "SHOW_FLOATING_PANEL":
         floating.show(message.panelId as PanelId, message.settings, message.position, message.theme);

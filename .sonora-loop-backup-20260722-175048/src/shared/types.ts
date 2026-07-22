@@ -1,8 +1,6 @@
 export type NumericSettingKey =
   | "volume"
   | "speed"
-  | "loopStart"
-  | "loopEnd"
   | "bass"
   | "mid"
   | "treble"
@@ -10,7 +8,7 @@ export type NumericSettingKey =
   | "stereoWidth"
   | "pan";
 
-export type BooleanSettingKey = "preservePitch" | "loopEnabled" | "nightMode";
+export type BooleanSettingKey = "preservePitch" | "nightMode";
 export type SettingKey = NumericSettingKey | BooleanSettingKey;
 export type PanelId = "playback" | "equalizer" | "environment" | "stereo";
 export type SettingsTab = "general" | "styles";
@@ -21,9 +19,6 @@ export interface AudioSettings {
   volume: number;
   speed: number;
   preservePitch: boolean;
-  loopEnabled: boolean;
-  loopStart: number;
-  loopEnd: number;
   bass: number;
   mid: number;
   treble: number;
@@ -80,7 +75,4 @@ export interface BackgroundResponse {
   capturedTabId?: number | null;
   currentTabActive?: boolean;
   playbackApplied?: boolean;
-  hasMedia?: boolean;
-  currentTime?: number;
-  duration?: number | null;
 }

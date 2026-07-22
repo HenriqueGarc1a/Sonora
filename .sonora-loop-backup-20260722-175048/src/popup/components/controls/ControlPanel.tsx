@@ -12,8 +12,6 @@ interface Props {
   dragging: boolean;
   onNumericChange: (key: NumericSettingKey, value: number) => void;
   onBooleanChange: (key: BooleanSettingKey, value: boolean) => void;
-  onMarkLoopPoint: (point: "start" | "end") => void;
-  onClearLoop: () => void;
   onFloat: () => void;
   onDragStart: (event: any) => void;
   onDragEnd: () => void;
@@ -26,13 +24,7 @@ export function ControlPanel(props: Props): any {
   let content: any;
 
   if (props.panelId === "playback") {
-    content = <PlaybackPanel
-      settings={props.settings}
-      onNumericChange={props.onNumericChange}
-      onBooleanChange={props.onBooleanChange}
-      onMarkLoopPoint={props.onMarkLoopPoint}
-      onClearLoop={props.onClearLoop}
-    />;
+    content = <PlaybackPanel settings={props.settings} onNumericChange={props.onNumericChange} onBooleanChange={props.onBooleanChange} />;
   } else if (props.panelId === "equalizer") {
     content = <EqualizerPanel settings={props.settings} onChange={props.onNumericChange} />;
   } else if (props.panelId === "environment") {

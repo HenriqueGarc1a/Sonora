@@ -6,9 +6,6 @@ export const DEFAULT_SETTINGS: Readonly<AudioSettings> = Object.freeze({
   volume: 100,
   speed: 1,
   preservePitch: true,
-  loopEnabled: false,
-  loopStart: 0,
-  loopEnd: 0,
   bass: 0,
   mid: 0,
   treble: 0,
@@ -44,8 +41,6 @@ export const AUDIO_PRESETS: Readonly<Record<string, PresetDefinition>> = Object.
 export const SETTING_LIMITS: Readonly<Record<string, readonly [number, number]>> = Object.freeze({
   volume: [0, 300],
   speed: [0.5, 2],
-  loopStart: [0, 86400],
-  loopEnd: [0, 86400],
   bass: [-12, 12],
   mid: [-12, 12],
   treble: [-12, 12],

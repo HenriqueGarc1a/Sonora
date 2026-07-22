@@ -56,47 +56,6 @@ export class AudioController {
     this.queueUpdate();
   };
 
-  markLoopPoint = async (point: "start" | "end"): Promise<void> => {
-    try {
-      const response = await sendToBackground({
-        type: "GET_PLAYBACK_POSITION",
-        tabId: this.getActiveTabId(),
-      });
-      if (!response.hasMedia) throw new Error("Nenhuma música ou vídeo foi encontrado nesta aba.");
-
-      const currentTime = Math.max(0, Number(response.currentTime) || 0);
-      if (point === "start") {
-        const duration = Number(response.duration);
-        const suggestedEnd = Number.isFinite(duration)
-          ? Math.min(duration, currentTime + 10)
-          : currentTime + 10;
-        this.settings = {
-          ...this.settings,
-          loopStart: currentTime,
-          loopEnd: this.settings.loopEnd > currentTime + 0.05 ? this.settings.loopEnd : suggestedEnd,
-        };
-      } else {
-        if (currentTime <= this.settings.loopStart + 0.05) {
-          throw new Error("O fim do loop precisa ficar depois do início.");
-        }
-        this.settings = { ...this.settings, loopEnd: currentTime, loopEnabled: true };
-      }
-
-      this.setError("");
-      this.notify();
-      this.queueUpdate(0);
-    } catch (error) {
-      this.setError(messageFrom(error));
-    }
-  };
-
-  clearLoop = (): void => {
-    this.settings = { ...this.settings, loopEnabled: false, loopStart: 0, loopEnd: 0 };
-    this.setError("");
-    this.notify();
-    this.queueUpdate(0);
-  };
-
   applyPreset = (presetName: string): void => {
     const preset = AUDIO_PRESETS[presetName];
     if (!preset) return;

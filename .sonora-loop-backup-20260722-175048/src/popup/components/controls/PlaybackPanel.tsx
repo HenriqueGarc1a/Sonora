@@ -7,20 +7,9 @@ interface Props {
   settings: AudioSettings;
   onNumericChange: (key: NumericSettingKey, value: number) => void;
   onBooleanChange: (key: BooleanSettingKey, value: boolean) => void;
-  onMarkLoopPoint: (point: "start" | "end") => void;
-  onClearLoop: () => void;
-}
-
-function formatTime(value: number): string {
-  const total = Math.max(0, Number(value) || 0);
-  const minutes = Math.floor(total / 60);
-  const seconds = total - minutes * 60;
-  return `${minutes}:${seconds.toFixed(2).padStart(5, "0")}`;
 }
 
 export function PlaybackPanel(props: Props): any {
-  const validLoop = props.settings.loopEnd > props.settings.loopStart + 0.05;
-
   return (
     <>
       <RangeControl
@@ -65,35 +54,6 @@ export function PlaybackPanel(props: Props): any {
         checked={props.settings.preservePitch}
         onChange={props.onBooleanChange}
       />
-
-      <div className="loop-card">
-        <div className="loop-card__header">
-          <div>
-            <strong>Loop A–B</strong>
-            <small>Repete somente o trecho marcado.</small>
-          </div>
-          <label className="loop-switch" title={validLoop ? "Ativar ou desativar loop" : "Marque início e fim primeiro"}>
-            <input
-              type="checkbox"
-              checked={props.settings.loopEnabled}
-              disabled={!validLoop}
-              onChange={(event: any) => props.onBooleanChange("loopEnabled", event.currentTarget.checked)}
-            />
-            <span aria-hidden="true"></span>
-          </label>
-        </div>
-
-        <div className="loop-times" aria-label="Pontos do loop">
-          <div><span>A · início</span><strong>{formatTime(props.settings.loopStart)}</strong></div>
-          <div><span>B · fim</span><strong>{formatTime(props.settings.loopEnd)}</strong></div>
-        </div>
-
-        <div className="loop-actions">
-          <button type="button" onClick={() => props.onMarkLoopPoint("start")}>Marcar início</button>
-          <button type="button" onClick={() => props.onMarkLoopPoint("end")}>Marcar fim</button>
-          <button type="button" className="loop-clear" onClick={props.onClearLoop}>Limpar</button>
-        </div>
-      </div>
     </>
   );
 }

@@ -12,9 +12,6 @@ export function normalizeSettings(settings: Partial<AudioSettings> = {}): AudioS
   result.preservePitch = typeof settings.preservePitch === "boolean"
     ? settings.preservePitch
     : DEFAULT_SETTINGS.preservePitch;
-  result.loopEnabled = typeof settings.loopEnabled === "boolean"
-    ? settings.loopEnabled
-    : DEFAULT_SETTINGS.loopEnabled;
   result.nightMode = typeof settings.nightMode === "boolean"
     ? settings.nightMode
     : DEFAULT_SETTINGS.nightMode;
