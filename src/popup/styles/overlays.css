@@ -1,0 +1,21 @@
+.preset-dialog { width: calc(100% - 38px); max-width: 344px; padding: 0; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--surface-raised); color: var(--text); }
+.preset-dialog::backdrop { background: color-mix(in srgb, var(--text) 36%, transparent); backdrop-filter: blur(4px); }
+.preset-dialog form { padding: 20px; }
+.dialog-mark { display: grid; width: 35px; height: 35px; margin-bottom: 13px; place-items: center; border-radius: 11px; background: var(--accent-soft); color: var(--accent); font-size: 21px; }
+.preset-dialog h2 { margin: 5px 0 3px; font-size: 18px; }
+.preset-dialog form > p:not(.field-error) { margin: 0 0 16px; color: var(--muted); font-size: 10px; }
+.preset-dialog label { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 700; }
+.preset-dialog input { width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 10px; outline: none; background: var(--bg); color: var(--text); font-size: 12px; }
+.preset-dialog input:focus { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.field-error { margin: 6px 0 0; color: var(--danger); font-size: 9px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 16px; }
+
+.toast { position: fixed; z-index: 30; right: 18px; bottom: 17px; left: 18px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 11px; background: var(--surface-raised); color: var(--accent); font-size: 10px; font-weight: 700; text-align: center; }
+
+footer { display: flex; align-items: center; justify-content: space-between; padding: 2px 3px 0; color: var(--muted); font-size: 9px; }
+[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+

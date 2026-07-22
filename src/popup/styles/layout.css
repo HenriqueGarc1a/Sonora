@@ -1,0 +1,63 @@
+.app { padding: 0 18px 16px; }
+
+.topbar {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  background: linear-gradient(to bottom, var(--bg) 78%, transparent);
+}
+
+.brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 5px 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+}
+
+.brand-mark { display: flex; align-items: center; gap: 2px; height: 20px; }
+.brand-mark i { display: block; width: 3px; border-radius: 4px; background: var(--accent); }
+.brand-mark i:nth-child(1) { height: 8px; }
+.brand-mark i:nth-child(2) { height: 17px; }
+.brand-mark i:nth-child(3) { height: 12px; }
+
+.topbar-actions, .section-actions { display: flex; align-items: center; gap: 7px; }
+
+.status-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--control-bg);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.status-chip.active { border-color: var(--accent-line); color: var(--accent); background: var(--accent-soft); }
+.status-chip.active .status-dot { background: var(--accent); box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 75%, transparent); }
+
+.icon-button, .float-button, .drag-handle {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: var(--control-bg);
+  cursor: pointer;
+}
+
+.icon-button { width: 31px; height: 31px; border-radius: 10px; color: var(--muted); }
+.icon-button:hover, .icon-button.active { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
+.icon-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+
