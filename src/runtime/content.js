@@ -59,6 +59,186 @@
   let audioSettings = { ...DEFAULT_SETTINGS };
   let floatingUpdateTimer = null;
 
+  // --- Motor de áudio (Web Audio API, roda inteiramente na página — sem tabCapture/offscreen) ---
+
+  let audioEngine = null; // { context, nodes, sources: Map<element, sourceNode> }
+  let engineEnabled = false;
+  let unlockListenerAttached = false;
+
+  async function ensureAudioEngine() {
+    if (audioEngine) {
+      return audioEngine;
+    }
+
+    const context = new AudioContext({ latencyHint: "interactive" });
+    await context.audioWorklet.addModule(
+      chrome.runtime.getURL("src/audio/stereo-width-processor.js"),
+    );
+
+    const mixInput = context.createGain(); // soma todos os elementos de mídia da página
+    const stereoWidth = new AudioWorkletNode(context, "stereo-width", {
+      numberOfInputs: 1,
+      numberOfOutputs: 1,
+      outputChannelCount: [2],
+      channelCount: 2,
+      channelCountMode: "explicit",
+      channelInterpretation: "speakers",
+    });
+
+    const bass = context.createBiquadFilter();
+    bass.type = "lowshelf";
+    bass.frequency.value = 200;
+
+    const mid = context.createBiquadFilter();
+    mid.type = "peaking";
+    mid.frequency.value = 1100;
+    mid.Q.value = 0.9;
+
+    const treble = context.createBiquadFilter();
+    treble.type = "highshelf";
+    treble.frequency.value = 4200;
+
+    const dry = context.createGain();
+    const convolver = context.createConvolver();
+    convolver.buffer = makeImpulseResponse(context, 2.6, 2.9);
+    const wet = context.createGain();
+    const master = context.createGain();
+    const dynamics = context.createDynamicsCompressor();
+    const makeup = context.createGain();
+    const panner = context.createStereoPanner();
+
+    mixInput.connect(stereoWidth);
+    stereoWidth.connect(bass);
+    bass.connect(mid);
+    mid.connect(treble);
+
+    treble.connect(dry);
+    treble.connect(convolver);
+    convolver.connect(wet);
+    dry.connect(master);
+    wet.connect(master);
+    master.connect(dynamics);
+    dynamics.connect(makeup);
+    makeup.connect(panner);
+    panner.connect(context.destination);
+
+    audioEngine = {
+      context,
+      nodes: { mixInput, stereoWidth, bass, mid, treble, dry, convolver, wet, master, dynamics, makeup, panner },
+      sources: new Map(),
+    };
+
+    attachUnlockListener();
+
+    return audioEngine;
+  }
+
+  function connectElementToEngine(element) {
+    if (!audioEngine || audioEngine.sources.has(element)) {
+      return;
+    }
+
+    try {
+      const source = audioEngine.context.createMediaElementSource(element);
+      source.connect(audioEngine.nodes.mixInput);
+      audioEngine.sources.set(element, source);
+    } catch (error) {
+      // Alguns players (ex: DRM, ou já ligados a outro AudioContext) não podem ser conectados.
+      console.warn("Sonora: não foi possível conectar este elemento de mídia.", error);
+    }
+  }
+
+  function attachUnlockListener() {
+    // Navegadores só liberam o AudioContext após um gesto do usuário NA PÁGINA.
+    // O clique de ativação acontece no popup da extensão, então garantimos um
+    // "destravamento" assim que a pessoa interagir com a própria página.
+    if (unlockListenerAttached) {
+      return;
+    }
+    unlockListenerAttached = true;
+
+    const unlock = () => {
+      if (audioEngine && audioEngine.context.state === "suspended") {
+        audioEngine.context.resume().catch(() => undefined);
+      }
+    };
+
+    document.addEventListener("click", unlock, { capture: true, passive: true });
+    document.addEventListener("keydown", unlock, { capture: true, passive: true });
+  }
+
+  function applyAudioSettings(settings) {
+    if (!audioEngine) {
+      return;
+    }
+
+    const { context, nodes } = audioEngine;
+    const now = context.currentTime;
+    const smooth = (param, value) => {
+      param.cancelScheduledValues(now);
+      param.setTargetAtTime(value, now, 0.018);
+    };
+
+    const volume = clamp(Number(settings.volume) / 100, 0, 3);
+    smooth(nodes.master.gain, volume);
+    smooth(nodes.bass.gain, clamp(Number(settings.bass), -12, 12));
+    smooth(nodes.mid.gain, clamp(Number(settings.mid), -12, 12));
+    smooth(nodes.treble.gain, clamp(Number(settings.treble), -12, 12));
+
+    const width = clamp(Number(settings.stereoWidth) / 100, 0, 2);
+    smooth(nodes.stereoWidth.parameters.get("width"), width);
+    smooth(nodes.panner.pan, clamp(Number(settings.pan) / 100, -1, 1));
+
+    const nightMode = settings.nightMode === true;
+    const boostLimiter = !nightMode && volume > 1;
+    smooth(nodes.dynamics.threshold, nightMode ? -28 : boostLimiter ? -3 : 0);
+    smooth(nodes.dynamics.knee, nightMode ? 24 : boostLimiter ? 4 : 0);
+    smooth(nodes.dynamics.ratio, nightMode ? 5 : boostLimiter ? 14 : 1);
+    smooth(nodes.dynamics.attack, nightMode ? 0.008 : 0.003);
+    smooth(nodes.dynamics.release, nightMode ? 0.28 : 0.16);
+    smooth(nodes.makeup.gain, nightMode ? 1.35 : 1);
+
+    const mix = clamp(Number(settings.reverb) / 100, 0, 1);
+    smooth(nodes.dry.gain, Math.cos(mix * Math.PI * 0.5));
+    smooth(nodes.wet.gain, Math.sin(mix * Math.PI * 0.5) * 0.72);
+  }
+
+  function disengageAudioEngine() {
+    engineEnabled = false;
+
+    if (!audioEngine) {
+      return;
+    }
+
+    // Um elemento de mídia, uma vez conectado, não pode "voltar" a tocar nativamente.
+    // Em vez de silenciar, ligamos cada fonte direto no destino, sem os efeitos.
+    for (const source of audioEngine.sources.values()) {
+      try {
+        source.disconnect();
+        source.connect(audioEngine.context.destination);
+      } catch {
+        // Ignora fontes já desconectadas.
+      }
+    }
+  }
+
+  function makeImpulseResponse(context, durationSeconds, decay) {
+    const length = Math.floor(context.sampleRate * durationSeconds);
+    const impulse = context.createBuffer(2, length, context.sampleRate);
+
+    for (let channel = 0; channel < impulse.numberOfChannels; channel += 1) {
+      const data = impulse.getChannelData(channel);
+      for (let index = 0; index < length; index += 1) {
+        const envelope = Math.pow(1 - index / length, decay);
+        data[index] = (Math.random() * 2 - 1) * envelope;
+      }
+    }
+
+    return impulse;
+  }
+
+  // --- Velocidade / pitch (funciona igual em qualquer navegador, não depende do motor de áudio) ---
+
   function applyToMedia(element) {
     if (!playbackState.enabled) {
       return;
@@ -98,6 +278,10 @@
       element.addEventListener("ratechange", reapply);
     }
     applyToMedia(element);
+
+    if (engineEnabled) {
+      connectElementToEngine(element);
+    }
   }
 
   function discoverMedia(root = document) {
@@ -126,14 +310,24 @@
 
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
-  function updatePlayback(nextState) {
+  // --- Ativação/desativação combinadas (velocidade/pitch + motor de áudio) ---
+
+  async function activateSonora(settings) {
     playbackState.enabled = true;
-    playbackState.speed = Math.min(2, Math.max(0.5, Number(nextState.speed) || 1));
-    playbackState.preservePitch = nextState.preservePitch !== false;
+    playbackState.speed = Math.min(2, Math.max(0.5, Number(settings.speed) || 1));
+    playbackState.preservePitch = settings.preservePitch !== false;
+
+    engineEnabled = true;
+    await ensureAudioEngine();
+    await audioEngine.context.resume().catch(() => undefined);
+
     discoverMedia();
+    applyAudioSettings(settings);
+    audioSettings = { ...DEFAULT_SETTINGS, ...settings };
+    updateAllFloatingPanels();
   }
 
-  function releasePlayback() {
+  function deactivateSonora() {
     playbackState.enabled = false;
     for (const [element, original] of managedElements) {
       element.removeEventListener("play", original.reapply);
@@ -145,18 +339,39 @@
         if ("preservesPitch" in original) element.preservesPitch = original.preservesPitch;
         if ("webkitPreservesPitch" in original) element.webkitPreservesPitch = original.webkitPreservesPitch;
       } catch {
-        // A página pode ter removido ou bloqueado o elemento durante a captura.
+        // A página pode ter removido ou bloqueado o elemento durante o processamento.
       }
     }
     managedElements.clear();
+    disengageAudioEngine();
   }
+
+  function updateSonoraSettings(settings) {
+    audioSettings = { ...DEFAULT_SETTINGS, ...audioSettings, ...settings };
+
+    if (playbackState.enabled) {
+      playbackState.speed = Math.min(2, Math.max(0.5, Number(settings.speed) || 1));
+      playbackState.preservePitch = settings.preservePitch !== false;
+      discoverMedia();
+    }
+
+    if (engineEnabled) {
+      applyAudioSettings(audioSettings);
+    }
+
+    updateAllFloatingPanels();
+  }
+
+  // --- Painéis flutuantes ---
 
   function showFloatingPanel(panelId, incomingSettings, savedPosition) {
     const definition = PANEL_DEFINITIONS[panelId];
     if (!definition) {
       return;
     }
-    syncFloatingSettings(incomingSettings);
+    if (incomingSettings) {
+      audioSettings = { ...DEFAULT_SETTINGS, ...audioSettings, ...incomingSettings };
+    }
 
     const existing = floatingPanels.get(panelId);
     if (existing) {
@@ -185,10 +400,11 @@
       <style>${floatingPanelStyles()}</style>
       <section class="panel" aria-label="Controles Sonora: ${definition.title}">
         <header class="titlebar">
-          <span class="brand"><i></i><strong>SONORA</strong></span>
+          <span class="brand"><i></i><strong>SONORA</strong><small>${definition.title}</small></span>
           <button class="close" type="button" aria-label="Fechar painel ${definition.title}" title="Remover da página">×</button>
         </header>
         <div class="fields">${definition.fields.map(createFieldMarkup).join("")}</div>
+        <footer>Arraste pelo topo · ajustes salvos automaticamente</footer>
       </section>
     `;
     document.documentElement.append(host);
@@ -240,7 +456,11 @@
       const eventName = field.type === "checkbox" ? "change" : "input";
       control.addEventListener(eventName, () => {
         audioSettings[field.key] = field.type === "checkbox" ? control.checked : Number(control.value);
-        updateAllFloatingPanels();
+        if (playbackState.enabled || engineEnabled) {
+          updateSonoraSettings(audioSettings);
+        } else {
+          updateAllFloatingPanels();
+        }
         queueFloatingSettingsUpdate();
       });
     }
@@ -313,11 +533,6 @@
     }
   }
 
-  function syncFloatingSettings(incomingSettings = {}) {
-    audioSettings = { ...DEFAULT_SETTINGS, ...audioSettings, ...incomingSettings };
-    updateAllFloatingPanels();
-  }
-
   function updateAllFloatingPanels() {
     for (const record of floatingPanels.values()) {
       updateFloatingPanel(record);
@@ -351,7 +566,8 @@
           settings: audioSettings,
         });
         if (response?.ok && response.settings) {
-          syncFloatingSettings(response.settings);
+          audioSettings = { ...DEFAULT_SETTINGS, ...audioSettings, ...response.settings };
+          updateAllFloatingPanels();
         }
       } catch {
         // A extensão pode ter sido recarregada enquanto o painel estava aberto.
@@ -425,8 +641,9 @@
   }
 
   globalThis.__sonoraPlaybackController = {
-    update: updatePlayback,
-    release: releasePlayback,
+    activate: activateSonora,
+    deactivate: deactivateSonora,
+    update: updateSonoraSettings,
     showFloatingPanel,
     hideFloatingPanel,
   };
@@ -440,13 +657,18 @@
       case "PING":
         sendResponse({ ready: true });
         break;
-      case "APPLY_PLAYBACK_SETTINGS":
-        updatePlayback(message);
-        sendResponse({ applied: true });
+      case "ENGAGE_SONORA":
+        activateSonora(message.settings)
+          .then(() => sendResponse({ ok: true }))
+          .catch((error) => sendResponse({ ok: false, error: error?.message || String(error) }));
+        return true;
+      case "DISENGAGE_SONORA":
+        deactivateSonora();
+        sendResponse({ ok: true });
         break;
-      case "RESET_PLAYBACK_SETTINGS":
-        releasePlayback();
-        sendResponse({ applied: true });
+      case "UPDATE_SONORA_SETTINGS":
+        updateSonoraSettings(message.settings);
+        sendResponse({ ok: true });
         break;
       case "SHOW_FLOATING_PANEL":
         showFloatingPanel(message.panelId, message.settings, message.position);
@@ -460,10 +682,6 @@
         hideAllFloatingPanels();
         sendResponse({ visible: false });
         break;
-      case "SYNC_SONORA_SETTINGS":
-        syncFloatingSettings(message.settings);
-        sendResponse({ synced: true });
-        break;
       default:
         return false;
     }
@@ -475,6 +693,4 @@
       setPanelPosition(record, { x: record.x, y: record.y });
     }
   });
-
-  discoverMedia();
 })();

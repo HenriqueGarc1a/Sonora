@@ -1,4 +1,3 @@
-const OFFSCREEN_PATH = "src/audio/offscreen.html";
 const CONTENT_PATH = "src/runtime/content.js";
 
 const DEFAULT_SETTINGS = Object.freeze({
@@ -65,31 +64,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-chrome.tabCapture.onStatusChanged.addListener(async (info) => {
-  if (info.status !== "stopped" && info.status !== "error") {
-    return;
-  }
-
-  await resetPlaybackSettings(info.tabId).catch(() => undefined);
-  const { capturedTabId } = await chrome.storage.session.get("capturedTabId");
-  if (capturedTabId === info.tabId) {
-    await chrome.storage.session.remove("capturedTabId");
-  }
-});
+// Sem chrome.tabCapture: cada aba processa seu próprio áudio localmente, então
+// não existe mais o conceito de "uma captura por vez" nem de transferi-la entre abas.
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
   if (changeInfo.status !== "complete") {
     return;
   }
 
-  const { capturedTabId } = await chrome.storage.session.get("capturedTabId");
-  if (capturedTabId !== tabId) {
+  const engagedTabs = await getEngagedTabs();
+  if (!engagedTabs.includes(tabId)) {
     return;
   }
 
   const settings = await getSettings();
-  await applyPlaybackSettings(tabId, settings).catch(() => undefined);
-  await restoreFloatingPanels(tabId, settings).catch(() => undefined);
+  await activateTab(tabId, settings).catch(() => undefined);
+});
+
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+  await removeEngagedTab(tabId);
 });
 
 async function handleMessage(message, sender) {
@@ -100,9 +93,9 @@ async function handleMessage(message, sender) {
     case "GET_STATE":
       return getState(tabId);
     case "START_CAPTURE":
-      return startCapture(tabId, message.settings);
+      return startProcessing(tabId, message.settings);
     case "STOP_CAPTURE":
-      return stopCapture();
+      return stopProcessing(tabId);
     case "UPDATE_SETTINGS":
       return updateSettings(tabId, message.settings);
     case "SAVE_CUSTOM_PRESET":
@@ -120,119 +113,73 @@ async function handleMessage(message, sender) {
       return { uiPreferences: await getUiPreferences() };
     case "RESET_UI_LAYOUT":
       return resetUiLayout(tabId);
-    case "CAPTURE_ENDED":
-      await resetPlaybackSettings(tabId).catch(() => undefined);
-      await chrome.storage.session.remove("capturedTabId");
-      return { active: false };
     default:
       throw new Error("Comando desconhecido.");
   }
 }
 
 async function getState(tabId) {
-  const [settings, capturedTabs, customPresets, uiPreferences] = await Promise.all([
+  const [settings, customPresets, uiPreferences, engagedTabs] = await Promise.all([
     getSettings(),
-    chrome.tabCapture.getCapturedTabs(),
     getCustomPresets(),
     getUiPreferences(),
+    getEngagedTabs(),
   ]);
-  const capture = capturedTabs.find(
-    (item) => item.status === "active" || item.status === "pending",
-  );
-
-  if (capture) {
-    await chrome.storage.session.set({ capturedTabId: capture.tabId });
-  } else {
-    await chrome.storage.session.remove("capturedTabId");
-  }
+  const active = engagedTabs.includes(tabId);
 
   return {
     settings,
     customPresets,
     uiPreferences,
-    active: Boolean(capture),
-    capturedTabId: capture?.tabId ?? null,
-    currentTabActive: Boolean(capture && capture.tabId === tabId),
+    active,
+    capturedTabId: active ? tabId : null,
+    currentTabActive: active,
   };
 }
 
-async function startCapture(tabId, incomingSettings) {
+async function startProcessing(tabId, incomingSettings) {
   if (!Number.isInteger(tabId)) {
-    throw new Error("Não encontrei uma aba válida para capturar.");
+    throw new Error("Não encontrei uma aba válida para ativar a Sonora.");
   }
 
   const settings = await saveSettings(incomingSettings);
-  await ensureOffscreenDocument();
-
-  // Valida a nova guia antes de interromper uma captura que já esteja ativa.
-  const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
-  const { capturedTabId: previousTabId } = await chrome.storage.session.get("capturedTabId");
-
-  await sendToOffscreen({ type: "STOP_CAPTURE" }).catch(() => undefined);
-
-  if (Number.isInteger(previousTabId) && previousTabId !== tabId) {
-    await resetPlaybackSettings(previousTabId).catch(() => undefined);
-    await hideAllFloatingPanels(previousTabId).catch(() => undefined);
-  }
-
-  await sendToOffscreen({ type: "START_CAPTURE", streamId, tabId, settings });
-  await chrome.storage.session.set({ capturedTabId: tabId });
-  await applyPlaybackSettings(tabId, settings).catch(() => undefined);
-  await restoreFloatingPanels(tabId, settings).catch(() => undefined);
+  await activateTab(tabId, settings);
+  await addEngagedTab(tabId);
 
   return { active: true, capturedTabId: tabId, settings };
 }
 
-async function stopCapture() {
-  const { capturedTabId } = await chrome.storage.session.get("capturedTabId");
-  if (await hasOffscreenDocument()) {
-    await sendToOffscreen({ type: "STOP_CAPTURE" }).catch(() => undefined);
+async function activateTab(tabId, settings) {
+  await ensureContentController(tabId);
+  await chrome.tabs.sendMessage(tabId, {
+    target: "content",
+    type: "ENGAGE_SONORA",
+    settings,
+  });
+  await restoreFloatingPanels(tabId, settings).catch(() => undefined);
+}
+
+async function stopProcessing(tabId) {
+  if (Number.isInteger(tabId)) {
+    await chrome.tabs
+      .sendMessage(tabId, { target: "content", type: "DISENGAGE_SONORA" })
+      .catch(() => undefined);
+    await removeEngagedTab(tabId);
   }
-  await resetPlaybackSettings(capturedTabId).catch(() => undefined);
-  await chrome.storage.session.remove("capturedTabId");
+
   return { active: false, capturedTabId: null };
 }
 
 async function updateSettings(tabId, incomingSettings) {
   const settings = await saveSettings(incomingSettings);
 
-  if (await hasOffscreenDocument()) {
-    await sendToOffscreen({ type: "UPDATE_AUDIO_SETTINGS", settings }).catch(() => undefined);
-  }
-
-  let playbackApplied = false;
   if (Number.isInteger(tabId)) {
-    playbackApplied = await applyPlaybackSettings(tabId, settings)
-      .then(() => true)
-      .catch(() => false);
-    await chrome.tabs.sendMessage(tabId, {
-      target: "content",
-      type: "SYNC_SONORA_SETTINGS",
-      settings,
-    }).catch(() => undefined);
+    await chrome.tabs
+      .sendMessage(tabId, { target: "content", type: "UPDATE_SONORA_SETTINGS", settings })
+      .catch(() => undefined);
   }
 
-  return { settings, playbackApplied };
-}
-
-async function applyPlaybackSettings(tabId, settings) {
-  await ensureContentController(tabId);
-  await chrome.tabs.sendMessage(tabId, {
-    target: "content",
-    type: "APPLY_PLAYBACK_SETTINGS",
-    speed: settings.speed,
-    preservePitch: settings.preservePitch,
-  });
-}
-
-async function resetPlaybackSettings(tabId) {
-  if (!Number.isInteger(tabId)) {
-    return;
-  }
-  await chrome.tabs.sendMessage(tabId, {
-    target: "content",
-    type: "RESET_PLAYBACK_SETTINGS",
-  });
+  return { settings };
 }
 
 async function ensureContentController(tabId) {
@@ -254,27 +201,23 @@ async function ensureContentController(tabId) {
   });
 }
 
-async function ensureOffscreenDocument() {
-  if (await hasOffscreenDocument()) {
-    return;
+async function getEngagedTabs() {
+  const { engagedTabs } = await chrome.storage.session.get("engagedTabs");
+  return Array.isArray(engagedTabs) ? engagedTabs : [];
+}
+
+async function addEngagedTab(tabId) {
+  const engagedTabs = await getEngagedTabs();
+  if (!engagedTabs.includes(tabId)) {
+    engagedTabs.push(tabId);
   }
-  await chrome.offscreen.createDocument({
-    url: OFFSCREEN_PATH,
-    reasons: ["USER_MEDIA"],
-    justification: "Capturar e processar o áudio da aba selecionada pelo usuário.",
-  });
+  await chrome.storage.session.set({ engagedTabs });
 }
 
-async function hasOffscreenDocument() {
-  return chrome.offscreen.hasDocument();
-}
-
-function sendToOffscreen(message) {
-  return chrome.runtime.sendMessage({ ...message, target: "offscreen" }).then((response) => {
-    if (!response?.ok) {
-      throw new Error(response?.error || "O processador de áudio não respondeu.");
-    }
-    return response;
+async function removeEngagedTab(tabId) {
+  const engagedTabs = await getEngagedTabs();
+  await chrome.storage.session.set({
+    engagedTabs: engagedTabs.filter((id) => id !== tabId),
   });
 }
 
@@ -498,14 +441,14 @@ function normalizePosition(position = {}) {
 
 function friendlyError(error) {
   const message = error instanceof Error ? error.message : String(error);
-  if (/cannot access|chrome:\/\/|edge:\/\/|extensions gallery/i.test(message)) {
-    return "O Chrome não permite controlar o áudio desta página interna.";
+  if (/cannot access|chrome:\/\/|edge:\/\/|about:|moz-extension|extensions gallery/i.test(message)) {
+    return "O navegador não permite controlar o áudio desta página interna.";
   }
   if (/activeTab|permission|not been invoked|gesture/i.test(message)) {
     return "Feche e abra a Sonora novamente nesta guia.";
   }
-  if (/capture|stream|media/i.test(message)) {
-    return "Não consegui capturar esta guia. Confirme que ela está reproduzindo áudio e reabra a Sonora.";
+  if (/audioContext|audioWorklet|MediaElementSource/i.test(message)) {
+    return "Não consegui iniciar o processamento de áudio nesta página. Recarregue a aba e tente de novo.";
   }
   return message || "Ocorreu um erro ao iniciar o áudio.";
 }

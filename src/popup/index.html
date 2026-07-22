@@ -82,7 +82,7 @@
             </div>
 
             <label class="toggle-row" for="preservePitch">
-              <span><strong>Manter pitch original</strong></span>
+              <span><strong>Manter pitch original</strong><small>A voz não fica grave ou aguda ao mudar a velocidade</small></span>
               <input id="preservePitch" data-setting="preservePitch" type="checkbox" checked />
               <span class="toggle" aria-hidden="true"></span>
             </label>
@@ -165,17 +165,19 @@
           <p>Feche um painel flutuante ou restaure o layout nas configurações para trazê-lo de volta.</p>
         </div>
 
-        <footer><span>v0.4</span></footer>
+        <footer><span>Arraste pelo puxador apenas para organizar.</span><span>v0.4</span></footer>
       </div>
 
       <div class="settings-view" id="settingsView" hidden>
         <div class="settings-title">
+          <span class="eyebrow">PREFERÊNCIAS</span>
           <h1>Configurações</h1>
+          <p>Personalize seus atalhos e a disposição dos controles.</p>
         </div>
 
         <section class="settings-card" aria-labelledby="customPresetsTitle">
           <div class="settings-card-heading">
-            <div><h2 id="customPresetsTitle">Meus presets</h2></div>
+            <div><h2 id="customPresetsTitle">Meus presets</h2><p>Ajustes que você salvou.</p></div>
             <span class="count-badge" id="customPresetCount">0</span>
           </div>
           <div class="saved-preset-list" id="savedPresetList"></div>
@@ -188,7 +190,7 @@
         </section>
 
         <section class="settings-card licenses-card" aria-labelledby="licensesTitle">
-          <div class="settings-card-heading"><div><h2 id="licensesTitle">licenças</h2></div></div>
+          <div class="settings-card-heading"><div><h2 id="licensesTitle">Código aberto e licenças</h2><p>Transparência sobre o que a Sonora usa.</p></div></div>
           <div class="license-summary">
             <span class="license-mark">MIT</span>
             <span><strong>Sonora</strong><small>Copyright © 2026 Sonora contributors</small></span>
@@ -202,7 +204,7 @@
           <div class="native-tech"><strong>Sem bibliotecas externas</strong><p>A interface usa JavaScript nativo, APIs de Extensões do Chrome e a Web Audio API. Nenhuma dependência de terceiros é empacotada.</p></div>
         </section>
 
-        <footer><span>v0.4</span></footer>
+        <footer><span>Configurações salvas neste navegador.</span><span>v0.4</span></footer>
       </div>
     </main>
 

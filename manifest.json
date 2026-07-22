@@ -1,18 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Sonora — Controle de Áudio",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Controle volume, velocidade, pitch, equalização, reverb e imagem estéreo na aba atual.",
-  "minimum_chrome_version": "116",
   "permissions": [
     "activeTab",
-    "offscreen",
     "scripting",
-    "storage",
-    "tabCapture"
+    "storage"
   ],
   "background": {
-    "service_worker": "src/runtime/background.js"
+    "service_worker": "src/runtime/background.js",
+    "scripts": ["src/runtime/background.js"]
   },
   "action": {
     "default_icon": {
@@ -29,5 +27,16 @@
     "32": "assets/icons/icon32.png",
     "48": "assets/icons/icon48.png",
     "128": "assets/icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/audio/stereo-width-processor.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "sonora@example.com"
+    }
   }
 }
